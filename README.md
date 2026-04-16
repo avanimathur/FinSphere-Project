@@ -3,7 +3,6 @@
 
 A full-stack personal finance web application designed to help users manage their money, track expenses, and improve financial literacy.
 
----
 
 ### 🚀 Features
 
@@ -34,7 +33,6 @@ A full-stack personal finance web application designed to help users manage thei
 - Learn key financial concepts
 - Beginner-friendly UI
 
----
 
 ## 🛠 Tech Stack
 
