@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Budget Tracker | Finance Companion</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="header">
+  <div class="logo" style="font-size: 27px;">FinSphere</div>
+  <nav>
+    <a href="index.html" class="active">Dashboard</a>
+    <a href="education.html">Learn</a>
+    <a href="profile.html">Profile</a>
+    <a href="bloglist.html">Blogs</a>
+    <a href="tracker.html", class="active">Budget Tracker</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <h2>📊 Monthly Budget Tracker</h2>
+  <p class="subtitle">
+    Track your income, expenses & savings as you enter corporate life.
+  </p>
+
+  <!-- SUMMARY -->
+  <div class="card" style="margin-bottom:30px;">
+    <h3>Budget Summary</h3>
+
+    <div class="dashboard-grid" style="margin-top:20px;">
+
+      <div class="feature-card">
+        <h3>💰 Income</h3>
+        <p id="totalIncome">₹0</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>💸 Expenses</h3>
+        <p id="totalExpense">₹0</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>🏦 Savings</h3>
+        <p id="totalSavings">₹0</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ADD TRANSACTION -->
+  <div class="card" style="margin-bottom:30px;">
+    <h3>Add Transaction</h3>
+
+    <div class="form-grid">
+
+      <div>
+        <label>Type</label>
+        <select id="type">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Category</label>
+        <input type="text" id="category" placeholder="Salary, Rent, Food" />
+      </div>
+
+      <div>
+        <label>Amount (₹)</label>
+        <input type="number" id="amount" placeholder="Enter amount" />
+      </div>
+
+      <div>
+        <label>Date</label>
+        <input type="date" id="date" required/>
+      </div>
+
+      <button class="full-btn" id="trans" onclick="addTransaction()">
+        Add Transaction
+      </button>
+
+    </div>
+  </div>
+
+  <!-- TRANSACTION HISTORY -->
+  <div class="card">
+
+    <h3>Transaction History</h3>
+
+    <div id="transactionList" style="margin-top:20px;"></div>
+
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p>Educational project · Not financial advice</p>
+</footer>
+
+<script src="script-new.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  loadTransactions();
+});
+</script>
+
+</body>
+</html>

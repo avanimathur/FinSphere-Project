@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Blog</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        body {
+            background: #0b0b0b;
+        }
+
+        /* MAIN WRAPPER */
+        .blog-wrapper {
+            max-width: 750px;
+            margin: 40px auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* BACK BUTTON */
+        .back-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* TITLE */
+        .blog-title {
+            text-align: center;
+            font-size: 42px;
+            margin-top: 40px;
+            margin-bottom: 10px;
+        }
+
+        /* AUTHOR */
+        .blog-meta {
+            text-align: center;
+            font-style: italic;
+            color: #a1a1aa;
+            margin-bottom: 30px;
+        }
+
+        /* CONTENT */
+        .blog-content {
+            font-size: 17px;
+            line-height: 1.9;
+            color: #e5e7eb;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo" style="font-size: 27px;">FinSphere</div>
+        <nav>
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="education.html">Learn</a>
+            <a href="profile.html">Profile</a>
+            <a href="bloglist.html">Blogs</a>
+            <a href="tracker.html">Budget Tracker</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+
+    <div class="blog-wrapper" id="blogContent"></div>
+
+    <script>
+        async function loadBlog() {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get("slug");
+
+            if (!slug) {
+                document.getElementById("blogContent").innerHTML = "Invalid blog link";
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/blog/${slug}`);
+
+                if (!res.ok) {
+                    throw new Error("Blog not found");
+                }
+
+                const blog = await res.json();
+
+                document.getElementById("blogContent").innerHTML = `
+                    <button class="btn back-btn" onclick="goBack()">
+                        ← Back to Blogs
+                    </button>
+
+                    <h1 class="blog-title">${blog.title}</h1>
+
+                    <div class="blog-meta">
+                        By ${blog.author || "Unknown"} • ${blog.readTime} min read
+                    </div>
+
+                    <div class="blog-content">
+                        ${blog.content}
+                    </div>
+                `;
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("blogContent").innerHTML = "Failed to load blog";
+            }
+        }
+
+        function goBack() {
+            window.location.href = "bloglist.html";
+        }
+
+        loadBlog();
+    </script>
+
+</body>
+
+</html>

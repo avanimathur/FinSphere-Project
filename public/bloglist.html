@@ -1,0 +1,261 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Learn | Finance Companion</title>
+    <link rel="stylesheet" href="styles.css" />
+
+    <style>
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .modal-content {
+            background: #111;
+            margin: 8% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-content input,
+        .modal-content textarea,
+        .modal-content select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #000;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo" style="font-size: 27px;">FinSphere</div>
+        <nav>
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="education.html">Learn</a>
+            <a href="profile.html">Profile</a>
+            <a href="bloglist.html", class="active">Blogs</a>
+            <a href="tracker.html">Budget Tracker</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <h2>📚 Financial Literacy Hub</h2>
+        <p class="subtitle">
+            Learn how to manage your money smartly
+        </p>
+
+        <!-- WRITE BLOG BUTTON -->
+        <button class="btn" onclick="openModal()">✍ Write Blog</button>
+
+        <!-- SEARCH -->
+        <input type="text" id="searchInput" placeholder="Search articles..." class="search-bar" style="width: 700px;"/>
+
+        <!-- CATEGORY -->
+        <div class="categories">
+            <button onclick="filterBlogs('all')">All</button>
+            <button onclick="filterBlogs('salary')">Salary</button>
+            <button onclick="filterBlogs('tax')">Tax</button>
+            <button onclick="filterBlogs('saving')">Saving</button>
+            <button onclick="filterBlogs('investment')">Investment</button>
+        </div>
+
+        <!-- BLOG LIST -->
+        <div id="blogContainer" class="blog-grid"></div>
+
+    </main>
+
+    <footer class="footer">
+        <p>Educational project · Not financial advice</p>
+    </footer>
+
+    <!-- MODAL -->
+    <div id="blogModal" class="modal">
+        <div class="modal-content">
+            <h2>Create Blog</h2>
+
+            <input id="author" placeholder="Your Name" />
+            <input id="title" placeholder="Blog Title" />
+
+            <textarea id="content" placeholder="Write your blog..." rows="5"></textarea>
+
+            <select id="category">
+                <option value="">Select Category</option>
+                <option value="salary">Salary</option>
+                <option value="tax">Tax</option>
+                <option value="saving">Saving</option>
+                <option value="investment">Investment</option>
+            </select>
+
+            <button class="btn" onclick="submitBlog()">Submit</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let allBlogs = [];
+
+        async function fetchBlogs() {
+            try {
+                const res = await fetch("/api/blog");
+                const data = await res.json();
+
+                allBlogs = data;
+                renderBlogs(allBlogs);
+
+            } catch (err) {
+                console.error("ERROR:", err);
+                document.getElementById("blogContainer").innerHTML = "Failed to load blogs";
+            }
+        }
+
+        function renderBlogs(blogs) {
+            const container = document.getElementById("blogContainer");
+            container.innerHTML = "";
+
+            if (blogs.length === 0) {
+                container.innerHTML = "<p>No blogs available</p>";
+                return;
+            }
+
+            blogs.forEach(blog => {
+                container.innerHTML += `
+                    <div class="blog-card" onclick="openBlog('${blog.slug}')">
+
+                        <button class="delete-icon"
+                            onclick="deleteBlog(event, '${blog._id}')" 
+                            style="float:right; cursor:pointer;">
+                            🗑
+                        </button>
+                        <h3>${blog.title}</h3>
+                        <p>${blog.summary || "Click to read more..."}</p>
+                        <p style="font-size:12px; color:#a1a1aa;">
+                            ${blog.readTime} min read • ${blog.summary || ""}
+                        </p>
+                    </div>
+                `;
+            });
+        }
+
+        function filterBlogs(category) {
+            if (category === "all") {
+                renderBlogs(allBlogs);
+            } else {
+                const filtered = allBlogs.filter(b => b.category === category);
+                renderBlogs(filtered);
+            }
+        }
+
+        function openBlog(slug) {
+            window.location.href = `blog.html?slug=${slug}`;
+        }
+
+        function openModal() {
+            document.getElementById("blogModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("blogModal").style.display = "none";
+        }
+
+        async function submitBlog() {
+            const author = document.getElementById("author").value;
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+            const category = document.getElementById("category").value;
+
+            if (!author || !title || !content || !category) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/blog", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        author,
+                        title,
+                        content,
+                        category,
+                        summary: `By ${author}`
+                    })
+                });
+
+                if (!res.ok) throw new Error("Failed to create blog");
+
+                closeModal();
+                fetchBlogs();
+
+            } catch (err) {
+                console.error(err);
+                alert("Error creating blog");
+            }
+        }
+
+        async function deleteBlog(event, id) {
+        event.stopPropagation(); // ✅ prevents opening blog
+
+        const confirmDelete = confirm("Are you sure you want to delete this blog?");
+        if (!confirmDelete) return;
+
+        try {
+            const res = await fetch(`/api/blog/${id}`, {
+                method: "DELETE"
+            });
+
+            if (!res.ok) {
+                throw new Error("Delete failed");
+            }
+
+            // reload blogs
+            fetchBlogs();
+
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete blog");
+            }
+        }
+
+        // SEARCH
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchBlogs();
+
+            const searchInput = document.getElementById("searchInput");
+
+            searchInput.addEventListener("input", (e) => {
+                const value = e.target.value.toLowerCase();
+
+                const filtered = allBlogs.filter(b =>
+                    b.title.toLowerCase().includes(value)
+                );
+
+                renderBlogs(filtered);
+            });
+        });
+    </script>
+
+</body>
+
+</html>
