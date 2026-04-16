@@ -43,8 +43,8 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     company: company.value,
     role: role.value,
     employmentType: employmentType.value,
-    stipend: stipend.value,
-    ctc: ctc.value,
+    stipend: parseFloat(stipend.value) || 0,   // FIX: send as number, not string
+    ctc:     parseFloat(ctc.value)     || 0,   // FIX: send as number, not string
     city: city.value
   };
 
