@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Salary Breakdown | FinSphere</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Salary page specific styles ── */
+    .salary-hero {
+      background: linear-gradient(135deg, rgba(250,204,21,0.08), rgba(234,179,8,0.04));
+      border: 1px solid rgba(250,204,21,0.2);
+      border-radius: 20px;
+      padding: 36px 40px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .salary-hero-text h2 { margin-bottom: 6px; font-size: 1.6rem; }
+    .salary-hero-text p  { color: #a1a1aa; margin: 0; font-size: 14px; }
+
+    .salary-input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .salary-input-row label { color: #facc15; font-size: 13px; white-space: nowrap; }
+
+    .salary-input-row input,
+    .salary-input-row select {
+      padding: 11px 14px;
+      border-radius: 9px;
+      border: 1px solid rgba(250,204,21,0.3);
+      background: #0f0f0f;
+      color: #f8fafc;
+      font-size: 14px;
+      width: 180px;
+    }
+
+    .salary-input-row input:focus,
+    .salary-input-row select:focus { outline: none; border-color: #facc15; }
+
+    .calc-btn {
+      padding: 11px 24px;
+      background: linear-gradient(90deg, #facc15, #eab308);
+      color: #0b0b0b;
+      font-weight: bold;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(250,204,21,0.25);
+      transition: opacity 0.2s;
+    }
+    .calc-btn:hover { opacity: 0.88; }
+
+    /* ── Results grid ── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 720px) { .results-grid { grid-template-columns: 1fr; } }
+
+    .result-card {
+      background: linear-gradient(180deg, #161616, #0c0c0c);
+      border: 1px solid rgba(250,204,21,0.2);
+      border-radius: 16px;
+      padding: 26px 28px;
+    }
+
+    .result-card h3 { font-size: 0.85rem; color: #a1a1aa; font-weight: 500; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .result-card .amount { font-size: 2rem; font-weight: 700; background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .result-card .sub    { font-size: 12px; color: #71717a; margin-top: 4px; }
+
+    /* ── Breakdown bar ── */
+    .breakdown-card {
+      background: linear-gradient(180deg, #161616, #0c0c0c);
+      border: 1px solid rgba(250,204,21,0.2);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+
+    .breakdown-card h3 { margin-bottom: 22px; }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .bar-label { width: 180px; font-size: 13px; color: #d4d4d8; flex-shrink: 0; }
+    .bar-label span { font-weight: 600; color: #f8fafc; }
+
+    .bar-track {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.7s cubic-bezier(.4,0,.2,1);
+    }
+
+    .bar-pct { width: 42px; text-align: right; font-size: 12px; color: #a1a1aa; }
+
+    /* ── Tax slabs table ── */
+    .slab-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .slab-table th {
+      text-align: left;
+      padding: 10px 14px;
+      color: #facc15;
+      border-bottom: 1px solid rgba(250,204,21,0.15);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .slab-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #d4d4d8;
+    }
+
+    .slab-table tr.active-slab td { color: #facc15; background: rgba(250,204,21,0.06); }
+    .slab-table tr:last-child td  { border-bottom: none; }
+
+    /* ── Tips ── */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-top: 0;
+    }
+
+    .tip-card {
+      background: linear-gradient(180deg, #161616, #0c0c0c);
+      border: 1px solid rgba(250,204,21,0.15);
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+
+    .tip-card .tip-icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .tip-card h4 { margin: 0 0 6px; font-size: 0.9rem; color: #facc15; }
+    .tip-card p  { margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5; }
+
+    /* ── Tag badge ── */
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(250,204,21,0.12);
+      border: 1px solid rgba(250,204,21,0.3);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: #facc15;
+      margin-bottom: 20px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+    <link rel="icon" href="assets/favicon.ico">
+</head>
+<body>
+
+<header class="header">
+  <a href="dashboard.html" style="text-decoration: none; color: inherit;">
+  <div class="logo" style="font-size: 27px;">FinSphere</div>
+  </a>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="salary.html">Salary Breakdown</a>
+    <a href="education.html">Learn</a>
+    <a href="profile.html">Profile</a>
+    <a href="bloglist.html">Blogs</a>
+    <a href="tracker.html">Budget Tracker</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </nav>
+</header>
+
+<main class="container">
+
+  <div id="profileBadge" class="profile-badge hidden">
+    ✅ <span id="badgeText">Auto-filled from your profile</span>
+  </div>
+
+  <!-- HERO INPUT -->
+  <div class="salary-hero">
+    <div class="salary-hero-text">
+      <h2>💰 Salary Breakdown</h2>
+      <p>Understand your CTC, tax deductions & actual in-hand salary</p>
+    </div>
+
+    <div class="salary-input-row">
+      <div>
+        <label>Employment Type</label><br>
+        <select id="empType" onchange="onTypeChange()">
+          <option value="fulltime">Full-time (CTC)</option>
+          <option value="intern">Intern (Stipend)</option>
+        </select>
+      </div>
+      <div>
+        <label id="incomeLabel">Annual CTC (₹)</label><br>
+        <input type="number" id="ctcInput" placeholder="e.g. 600000" min="0" />
+      </div>
+      <div>
+        <label>Tax Regime</label><br>
+        <select id="regime">
+          <option value="new">New Regime</option>
+          <option value="old">Old Regime</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calculate()">Calculate →</button>
+    </div>
+  </div>
+
+  <!-- RESULTS (hidden until calculated) -->
+  <div id="resultsSection" class="hidden">
+
+    <div class="results-grid">
+      <div class="result-card">
+        <h3>💰 Gross Monthly</h3>
+        <div class="amount" id="grossMonthly">₹0</div>
+        <div class="sub" id="grossSub"></div>
+      </div>
+      <div class="result-card">
+        <h3>🏦 In-Hand Monthly</h3>
+        <div class="amount" id="inHandMonthly">₹0</div>
+        <div class="sub" id="inHandSub"></div>
+      </div>
+      <div class="result-card">
+        <h3>📋 Annual Tax</h3>
+        <div class="amount" id="annualTax">₹0</div>
+        <div class="sub" id="taxSub"></div>
+      </div>
+      <div class="result-card">
+        <h3>🏢 PF Deduction</h3>
+        <div class="amount" id="pfDeduction">₹0</div>
+        <div class="sub" id="pfSub"></div>
+      </div>
+    </div>
+
+    <!-- BREAKDOWN BAR CHART -->
+    <div class="breakdown-card">
+      <h3>📊 Monthly Breakdown</h3>
+      <div id="barChart"></div>
+    </div>
+
+    <!-- TAX SLAB TABLE (fulltime only) -->
+    <div class="breakdown-card" id="slabSection">
+      <h3>🧾 Tax Slab Details</h3>
+      <table class="slab-table" id="slabTable"></table>
+    </div>
+
+    <!-- SAVINGS TIPS -->
+    <div class="breakdown-card">
+      <h3>💡 Smart Saving Tips</h3>
+      <div class="tips-grid" id="tipsGrid"></div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p>Educational project · Not financial advice · Tax figures are approximate</p>
+</footer>
+
+<script>
+  const token = localStorage.getItem("token");
+  if (!token) window.location.href = "index.html";
+
+  function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "index.html";
+  }
+
+  function fmt(n) {
+    return "₹" + Math.round(n).toLocaleString("en-IN");
+  }
+
+  function onTypeChange() {
+    const type = document.getElementById("empType").value;
+    document.getElementById("incomeLabel").innerText =
+      type === "intern" ? "Monthly Stipend (₹)" : "Annual CTC (₹)";
+    document.getElementById("ctcInput").placeholder =
+      type === "intern" ? "e.g. 20000" : "e.g. 600000";
+    document.getElementById("regime").closest("div").style.display =
+      type === "intern" ? "none" : "";
+    document.getElementById("slabSection").style.display =
+      type === "intern" ? "none" : "";
+  }
+
+  /* ── Load profile data on page load ── */
+  async function loadProfile() {
+    try {
+      const res = await fetch("/api/profile", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) return;
+      const p = await res.json();
+
+      const badge    = document.getElementById("profileBadge");
+      const badgeTxt = document.getElementById("badgeText");
+
+      if (p.employmentType === "Intern" && p.stipend > 0) {
+        document.getElementById("empType").value = "intern";
+        document.getElementById("ctcInput").value  = p.stipend;
+        onTypeChange();
+        badge.classList.remove("hidden");
+        badgeTxt.innerText = `Auto-filled: ₹${Number(p.stipend).toLocaleString("en-IN")}/month stipend from your profile`;
+        calculate();
+      } else if (p.ctc > 0) {
+        document.getElementById("empType").value = "fulltime";
+        document.getElementById("ctcInput").value  = p.ctc;
+        onTypeChange();
+        badge.classList.remove("hidden");
+        badgeTxt.innerText = `Auto-filled: ₹${Number(p.ctc).toLocaleString("en-IN")} CTC from your profile`;
+        calculate();
+      }
+    } catch (e) {
+      console.warn("Profile load failed:", e);
+    }
+  }
+
+  /* ── Tax calculation (New Regime FY 2024-25) ── */
+  function calcTaxNew(taxable) {
+    const slabs = [
+      { from: 0,       to: 300000,  rate: 0   },
+      { from: 300000,  to: 600000,  rate: 0.05 },
+      { from: 600000,  to: 900000,  rate: 0.10 },
+      { from: 900000,  to: 1200000, rate: 0.15 },
+      { from: 1200000, to: 1500000, rate: 0.20 },
+      { from: 1500000, to: Infinity,rate: 0.30 }
+    ];
+    let tax = 0;
+    const rows = [];
+    for (const s of slabs) {
+      if (taxable <= s.from) { rows.push({ ...s, taxed: 0, tax: 0 }); continue; }
+      const taxed = Math.min(taxable, s.to) - s.from;
+      const t     = taxed * s.rate;
+      tax += t;
+      rows.push({ ...s, taxed, tax: t });
+    }
+    // Rebate u/s 87A: zero tax if taxable ≤ 7L
+    if (taxable <= 700000) tax = 0;
+    return { tax, rows };
+  }
+
+  /* ── Tax calculation (Old Regime) ── */
+  function calcTaxOld(taxable) {
+    // Standard deduction 50k already removed before call
+    const slabs = [
+      { from: 0,      to: 250000,  rate: 0    },
+      { from: 250000, to: 500000,  rate: 0.05 },
+      { from: 500000, to: 1000000, rate: 0.20 },
+      { from: 1000000,to: Infinity,rate: 0.30 }
+    ];
+    let tax = 0;
+    const rows = [];
+    for (const s of slabs) {
+      if (taxable <= s.from) { rows.push({ ...s, taxed: 0, tax: 0 }); continue; }
+      const taxed = Math.min(taxable, s.to) - s.from;
+      const t     = taxed * s.rate;
+      tax += t;
+      rows.push({ ...s, taxed, tax: t });
+    }
+    if (taxable <= 500000) tax = 0;
+    return { tax, rows };
+  }
+
+  function calculate() {
+    const type   = document.getElementById("empType").value;
+    const input  = parseFloat(document.getElementById("ctcInput").value) || 0;
+    const regime = document.getElementById("regime").value;
+
+    if (input <= 0) { alert("Please enter a valid amount."); return; }
+
+    /* ── INTERN path ── */
+    if (type === "intern") {
+      const monthly    = input;
+      const annual     = monthly * 12;
+      const tds        = annual > 250000 ? annual * 0.05 : 0; // rough TDS for interns
+      const tdsMonthly = tds / 12;
+      const inHand     = monthly - tdsMonthly;
+
+      showResults({
+        grossMonthly : monthly,
+        grossSub     : `₹${Math.round(annual).toLocaleString("en-IN")} per year`,
+        inHandMonthly: inHand,
+        inHandSub    : tds > 0 ? `After ~TDS of ${fmt(tdsMonthly)}/month` : "No TDS (stipend < ₹2.5L/yr)",
+        annualTax    : tds,
+        taxSub       : "Approx TDS on stipend",
+        pfDeduction  : 0,
+        pfSub        : "PF not applicable for interns",
+        bars: [
+          { label: "In-Hand",  value: inHand,       color: "#22c55e", pct: (inHand / monthly) * 100 },
+          { label: "TDS",      value: tdsMonthly,   color: "#ef4444", pct: (tdsMonthly / monthly) * 100 }
+        ],
+        slabRows: null,
+        tips: internTips()
+      });
+      return;
+    }
+
+    /* ── FULL-TIME path ── */
+    const ctc         = input;
+    const basic       = ctc * 0.40;           // 40% of CTC
+    const hra         = ctc * 0.20;           // 20%
+    const pfEmployee  = Math.min(basic * 0.12, 21600); // 12% of basic, capped at ₹1800/mo
+    const pfEmployer  = pfEmployee;
+    const grossAnnual = ctc - pfEmployer;     // Gross = CTC minus employer PF
+
+    // Taxable income
+    const stdDeduction = 75000; // FY 2024-25 new regime
+    let   taxableNew   = Math.max(0, grossAnnual - pfEmployee - stdDeduction);
+    let   taxableOld   = Math.max(0, grossAnnual - pfEmployee - 50000 - 150000); // 50k std + 80C 1.5L
+
+    const { tax: taxNew, rows: rowsNew } = calcTaxNew(taxableNew);
+    const { tax: taxOld, rows: rowsOld } = calcTaxOld(taxableOld);
+
+    const chosenTax  = regime === "new" ? taxNew : taxOld;
+    const chosenRows = regime === "new" ? rowsNew : rowsOld;
+    const cess       = chosenTax * 0.04;
+    const totalTax   = chosenTax + cess;
+
+    const monthly        = grossAnnual / 12;
+    const pfEmpMonthly   = pfEmployee  / 12;
+    const taxMonthly     = totalTax    / 12;
+    const inHand         = monthly - pfEmpMonthly - taxMonthly;
+
+    showResults({
+      grossMonthly : monthly,
+      grossSub     : `₹${Math.round(grossAnnual).toLocaleString("en-IN")} per year (CTC − employer PF)`,
+      inHandMonthly: inHand,
+      inHandSub    : `After PF + tax deductions`,
+      annualTax    : totalTax,
+      taxSub       : `Incl. 4% cess · ${regime === "new" ? "New" : "Old"} Regime`,
+      pfDeduction  : pfEmployee,
+      pfSub        : `₹${Math.round(pfEmpMonthly).toLocaleString("en-IN")}/month · Goes to your PF account`,
+      bars: [
+        { label: "In-Hand",  value: inHand,       color: "#22c55e", pct: (inHand / monthly) * 100 },
+        { label: "Income Tax",value: taxMonthly,  color: "#ef4444", pct: (taxMonthly / monthly) * 100 },
+        { label: "PF",       value: pfEmpMonthly, color: "#3b82f6", pct: (pfEmpMonthly / monthly) * 100 }
+      ],
+      slabRows: chosenRows,
+      tips: fulltimeTips(ctc, regime, taxNew, taxOld)
+    });
+  }
+
+  function showResults(d) {
+    document.getElementById("resultsSection").classList.remove("hidden");
+
+    document.getElementById("grossMonthly").innerText  = fmt(d.grossMonthly);
+    document.getElementById("grossSub").innerText      = d.grossSub;
+    document.getElementById("inHandMonthly").innerText = fmt(d.inHandMonthly);
+    document.getElementById("inHandSub").innerText     = d.inHandSub;
+    document.getElementById("annualTax").innerText     = fmt(d.annualTax);
+    document.getElementById("taxSub").innerText        = d.taxSub;
+    document.getElementById("pfDeduction").innerText   = fmt(d.pfDeduction);
+    document.getElementById("pfSub").innerText         = d.pfSub;
+
+    /* Bar chart */
+    const chart = document.getElementById("barChart");
+    chart.innerHTML = d.bars.map(b => `
+      <div class="bar-row">
+        <div class="bar-label">${b.label} <span>${fmt(b.value)}</span></div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${Math.max(b.pct,0).toFixed(1)}%;background:${b.color}"></div>
+        </div>
+        <div class="bar-pct">${Math.max(b.pct,0).toFixed(0)}%</div>
+      </div>
+    `).join("");
+
+    /* Slab table */
+    const slabSec = document.getElementById("slabSection");
+    if (d.slabRows) {
+      slabSec.style.display = "";
+      const regime = document.getElementById("regime").value;
+      const ctcInput = parseFloat(document.getElementById("ctcInput").value) || 0;
+      const basic  = ctcInput * 0.40;
+      const pf     = Math.min(basic * 0.12, 21600);
+      const stdDed = regime === "new" ? 75000 : 50000;
+      const extraDed = regime === "old" ? 150000 : 0;
+      const grossAnnual = ctcInput - pf;
+      const taxable = Math.max(0, grossAnnual - pf - stdDed - extraDed);
+
+      document.getElementById("slabTable").innerHTML = `
+        <thead>
+          <tr>
+            <th>Income Slab</th>
+            <th>Rate</th>
+            <th>Taxable Amount</th>
+            <th>Tax</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.slabRows.map(r => `
+            <tr class="${r.taxed > 0 ? "active-slab" : ""}">
+              <td>${r.to === Infinity ? `Above ₹${(r.from/100000).toFixed(1)}L` : `₹${(r.from/100000).toFixed(1)}L – ₹${(r.to/100000).toFixed(1)}L`}</td>
+              <td>${(r.rate * 100).toFixed(0)}%</td>
+              <td>${r.taxed > 0 ? fmt(r.taxed) : "—"}</td>
+              <td>${r.taxed > 0 ? fmt(r.tax) : "—"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      `;
+    } else {
+      slabSec.style.display = "none";
+    }
+
+    /* Tips */
+    document.getElementById("tipsGrid").innerHTML = d.tips.map(t => `
+      <div class="tip-card">
+        <div class="tip-icon">${t.icon}</div>
+        <h4>${t.title}</h4>
+        <p>${t.body}</p>
+      </div>
+    `).join("");
+
+    // Smooth scroll to results
+    document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function internTips() {
+    return [
+      { icon: "💳", title: "Open a Zero-Balance Account", body: "Use salary accounts from HDFC, SBI, or Kotak — no minimum balance needed as a student." },
+      { icon: "📈", title: "Start a SIP Early", body: "Even ₹500/month in an index fund can compound significantly. Time in market beats timing the market." },
+      { icon: "🛡️", title: "Build an Emergency Fund", body: "Keep 2–3 months of expenses in a liquid fund or high-interest savings account before investing." },
+      { icon: "📋", title: "File ITR Even If No Tax", body: "Filing ITR with zero tax builds your financial record and helps with future loans & visas." },
+    ];
+  }
+
+  function fulltimeTips(ctc, regime, taxNew, taxOld) {
+    const tips = [
+      { icon: "🏠", title: "Claim HRA Exemption", body: "If you live on rent, claim HRA under old regime — can save ₹50K–₹2L+ in tax depending on city." },
+      { icon: "📉", title: "Invest ₹1.5L under 80C", body: "ELSS, PPF, EPF top-up, or LIC premium counts. Saves up to ₹46,800 in tax under old regime." },
+      { icon: "🏥", title: "Medical Insurance (80D)", body: "Health insurance premium is deductible up to ₹25,000. Parents' premium adds another ₹25,000." },
+      { icon: "🏦", title: "NPS for Extra Deduction", body: "Up to ₹50,000 extra deduction under 80CCD(1B) — reduces taxable income significantly." },
+    ];
+    if (taxNew < taxOld - 5000) {
+      tips.unshift({ icon: "✅", title: "New Regime Saves You More", body: `New regime saves ₹${Math.round(taxOld - taxNew).toLocaleString("en-IN")} in tax for your CTC. Fewer deductions to manage.` });
+    } else if (taxOld < taxNew - 5000) {
+      tips.unshift({ icon: "✅", title: "Old Regime Saves You More", body: `Old regime saves ₹${Math.round(taxNew - taxOld).toLocaleString("en-IN")} in tax if you claim 80C, HRA, and 80D fully.` });
+    }
+    return tips;
+  }
+
+  document.addEventListener("DOMContentLoaded", loadProfile);
+</script>
+</body>
+</html>

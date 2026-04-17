@@ -4,13 +4,17 @@
   <meta charset="UTF-8" />
   <title>FinSphere</title>
   <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="assets/favicon.ico">
 </head>
 <body>
 
 <header class="header">
+  <a href="dashboard.html" style="text-decoration: none; color: inherit;">
   <div class="logo" style="font-size: 27px;">FinSphere</div>
+  </a>
   <nav>
     <a href="dashboard.html" class="active">Dashboard</a>
+    <a href="salary.html">Salary Breakdown</a>
     <a href="education.html">Learn</a>
     <a href="profile.html">Profile</a>
     <a href="bloglist.html">Blogs</a>
@@ -27,7 +31,7 @@
 
   <div class="dashboard-grid">
 
-    <div class="feature-card" onclick="goToSalary()">
+    <div class="feature-card" onclick="location.href='salary.html'">
       <h3>💰 Salary Breakdown</h3>
       <p>Understand CTC, tax & in-hand salary</p>
     </div>
